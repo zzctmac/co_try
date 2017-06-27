@@ -39,9 +39,7 @@ abstract class Tcp
 
         $this->client->on('receive', [$this, 'onReceive']);
 
-        $this->client->on('connect', function(Client $cli){
-            echo "connect=>" . $this->host . ":" . $this->port . PHP_EOL;
-        });
+        $this->client->on('connect', [$this, 'onConnect']);
 
         $this->client->on('error', function(Client $cli){
             echo "error connect=>" . $this->host . ":" . $this->port . PHP_EOL;
@@ -57,6 +55,10 @@ abstract class Tcp
 
 
 
+    public function onConnect(Client $cli)
+    {
+        echo "connect=>" . $this->host . ":" . $this->port . PHP_EOL;
+    }
 
     public function onReceive(Client $cli, $data)
     {
