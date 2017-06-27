@@ -18,7 +18,7 @@ class Atomic
     public function getAction(Request $request, Response $response)
     {
         GlobalObject::getSimpleClient()->get(function(Simple $proto) use($response) {
-            $response->end($proto->args[0]);
+            $response->end("<h1>" . $proto->args[0] . "</h1>");
         });
     }
 

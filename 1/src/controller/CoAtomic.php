@@ -17,7 +17,7 @@ class CoAtomic extends Co
     public function getAction(Request $request, Response $response)
     {
         $proto = (yield GlobalObject::getCoSimpleClient()->get($this));
-        $response->end($proto->args[0]);
+        $response->end("<h1>" . $proto->args[0] . "</h1>");
     }
 
     public function tAction(Request $request, Response $response)
