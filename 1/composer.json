@@ -1,0 +1,17 @@
+{
+  "name": "zzc/co_try_1",
+  "description": "co try",
+  "minimum-stability": "dev",
+  "license": "GPL-2.0",
+  "authors": [
+    {
+      "name": "zzc",
+      "email": "zhouzhichao@qmtv.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "ct\\":"src/"
+    }
+  }
+}
