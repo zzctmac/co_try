@@ -8,7 +8,6 @@
 namespace ct\socket;
 
 
-use ct\co\Context;
 
 class CoSimple extends CoTcp
 {

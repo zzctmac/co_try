@@ -9,6 +9,7 @@ namespace ct;
 
 
 use ct\route\IBase;
+use ct\socket\CoRedis;
 use ct\socket\CoSimple;
 
 class GlobalObject {
@@ -42,4 +43,15 @@ class GlobalObject {
     {
         return self::$coSimple;
     }
+
+    /**
+     * @var CoRedis
+     */
+    public static $coRedis;
+
+    public static function getCoRedisClient()
+    {
+        return self::$coRedis;
+    }
+
 }

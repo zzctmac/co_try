@@ -91,5 +91,5 @@ abstract class Tcp
      * @param $data
      * @return IBase
      */
-    abstract public function decode($data);
+    abstract protected function decode($data);
 }

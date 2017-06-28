@@ -18,11 +18,16 @@ abstract class CoTcp extends Tcp
 
     protected $coQueue;
 
+    protected $readyCallQueue;
+
+    public static $coQueueMaxNum = 30;
+
     public function __construct(Tcp $tcp)
     {
         $this->tcp = $tcp;
         $this->tcp->client->on('receive', [$this, 'onReceive']);
         $this->coQueue = new \SplQueue();
+        $this->readyCallQueue = new \SplQueue();
     }
 
     public function connect()
@@ -38,8 +43,13 @@ abstract class CoTcp extends Tcp
 
     public function onReceive(Client $cli, $data)
     {
+        if($this->readyCallQueue->count() > 0) {
+            list($proto, $co) = $this->readyCallQueue->dequeue();
+            $this->send($proto, $co);
+        }
         $co = $this->coQueue->dequeue();
-        $co->runCoroutine($this->decode($data));
+        $msg = $this->decode($data);
+        $co->runCoroutine($msg);
     }
 
 
@@ -50,8 +60,13 @@ abstract class CoTcp extends Tcp
 
     public function send(IBase $proto, $co)
     {
-        $this->tcp->client->send($proto->encode());
-        $this->coQueue->enqueue($co);
+        if($this->coQueue->count() >= static::$coQueueMaxNum) {
+            echo 'wait too much';
+            $this->readyCallQueue->enqueue([$proto, $co]);
+        }  else {
+            $this->tcp->client->send($proto->encode());
+            $this->coQueue->enqueue($co);
+        }
 
     }
 
@@ -59,7 +74,7 @@ abstract class CoTcp extends Tcp
      * @param $data
      * @return IBase
      */
-    public function decode($data)
+    protected function decode($data)
     {
         return $this->tcp->decode($data);
     }

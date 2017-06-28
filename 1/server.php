@@ -37,6 +37,9 @@ $serv->on('WorkerStart', function ($serv, $worker_id){
     \ct\GlobalObject::$coSimple = new \ct\socket\CoSimple("127.0.0.1", 9501);
     \ct\GlobalObject::$coSimple->connect();
 
+    \ct\GlobalObject::$coRedis = new \ct\socket\CoRedis("127.0.0.1", 6379);
+    \ct\GlobalObject::$coRedis->connect();
+
     \ct\GlobalObject::$route = new \ct\route\TwoLevel();
 });
 

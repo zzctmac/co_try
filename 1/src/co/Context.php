@@ -14,6 +14,8 @@ trait Context
 
     protected $co = null;
 
+    protected $start = true;
+
     /**
      * @param null $co
      */
@@ -54,10 +56,11 @@ trait Context
     {
 
 
-            if($message != null) {
+            if(!$this->start) {
                 $this->co->send($message);
 
             }
+            $this->start = false;
 
             $value = $this->co->current();
             if($value instanceof ReturnValue) {
