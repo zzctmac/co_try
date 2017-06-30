@@ -13,7 +13,11 @@ use ct\protocol\redis\MethodParserFactory;
 class Redis implements IBase
 {
 
-    protected $buf;
+
+    public $isPing = false;
+
+
+
 
     public $data;
 
@@ -35,11 +39,17 @@ class Redis implements IBase
     /**
      * @param $data
      * @param Redis $requestProto
-     * @return static
+     * @param null $buf
+     * @return mixed|null|static|[]
      */
-    public static function decode($data, $requestProto = null)
+    public static function decode($data, $requestProto = null, $buf = null)
     {
-        $handler = MethodParserFactory::getInstance($requestProto);
+
+        $data = $buf . $data;
+        $firstChar = substr($data, 0, 1);
+
+
+        $handler = MethodParserFactory::getInstance($firstChar, $requestProto);
         if($handler == null)
             return null;
         return $handler->decode($data, $requestProto);
@@ -50,6 +60,9 @@ class Redis implements IBase
      */
     public function encode()
     {
+        if($this->isPing) {
+            return "ping\r\n";
+        }
         $msgArr = [];
         $msgArr[] = "*" . count($this->data);
         foreach ($this->data as $item)

@@ -13,7 +13,11 @@ include  __DIR__ . '/vendor/autoload.php';
 
 $serv = new Swoole\Http\Server("0.0.0.0", 9081);
 
+/*$serv->set([
+    'worker_num' => 2,
+    'max_connection' => 2048
 
+]);*/
 
 $serv->on('Request', function(\Swoole\Http\Request $request,\Swoole\Http\Response $response) {
     try {

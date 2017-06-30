@@ -18,21 +18,56 @@ abstract class CoTcp extends Tcp
 
     protected $coQueue;
 
-    protected $readyCallQueue;
 
     public static $coQueueMaxNum = 30;
+
+    protected $isCoConnect = false;
+    protected $isCoClose = false;
 
     public function __construct(Tcp $tcp)
     {
         $this->tcp = $tcp;
         $this->tcp->client->on('receive', [$this, 'onReceive']);
         $this->coQueue = new \SplQueue();
-        $this->readyCallQueue = new \SplQueue();
+        $this->tcp->client->on('connect', [$this, 'onConnect']);
+        $this->tcp->client->on('close', [$this, 'onClose']);
     }
 
     public function connect()
     {
         $this->tcp->connect();
+    }
+
+    public function coConnect($context)
+    {
+        $this->isCoConnect = true;
+        $this->coQueue->enqueue($context);
+        $this->connect();
+    }
+
+    public function onConnect(Client $cli)
+    {
+        $this->tcp->onConnect($cli);
+        if($this->isCoConnect) {
+            $co = $this->coQueue->dequeue();
+            $co->runCoroutine('connect');
+        }
+    }
+
+    public function coClose($context)
+    {
+        $this->isCoClose = true;
+        $this->coQueue->enqueue($context);
+        $this->close();
+    }
+
+    public function onClose(Client $cli)
+    {
+        $this->tcp->onClose($cli);
+        if($this->isCoClose) {
+            $co = $this->coQueue->dequeue();
+            $co->runCoroutine('close');
+        }
     }
 
 
@@ -43,13 +78,11 @@ abstract class CoTcp extends Tcp
 
     public function onReceive(Client $cli, $data)
     {
-        if($this->readyCallQueue->count() > 0) {
-            list($proto, $co) = $this->readyCallQueue->dequeue();
-            $this->send($proto, $co);
-        }
         $co = $this->coQueue->dequeue();
         $msg = $this->decode($data);
         $co->runCoroutine($msg);
+
+
     }
 
 
@@ -60,14 +93,9 @@ abstract class CoTcp extends Tcp
 
     public function send(IBase $proto, $co)
     {
-        if($this->coQueue->count() >= static::$coQueueMaxNum) {
-            echo 'wait too much';
-            $this->readyCallQueue->enqueue([$proto, $co]);
-        }  else {
-            $this->tcp->client->send($proto->encode());
+        $msg = $proto->encode();
+            $this->tcp->client->send($msg);
             $this->coQueue->enqueue($co);
-        }
-
     }
 
     /**
@@ -78,4 +106,6 @@ abstract class CoTcp extends Tcp
     {
         return $this->tcp->decode($data);
     }
+
+
 }

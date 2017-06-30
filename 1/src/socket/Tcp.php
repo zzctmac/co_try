@@ -46,13 +46,17 @@ abstract class Tcp
             $cli->close();
         });
 
-        $this->client->on('close', function(Client $cli){
-            echo "error close=>" . $this->host . ":" . $this->port . PHP_EOL;
-        });
+        $this->client->on('close', [$this, 'onClose']);
 
         $this->init();
     }
 
+
+
+    public function onClose(Client $cli)
+    {
+        echo "close=>" . $this->host . ":" . $this->port . PHP_EOL;
+    }
 
 
     public function onConnect(Client $cli)

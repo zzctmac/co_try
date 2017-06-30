@@ -13,23 +13,29 @@ use ct\protocol\Redis;
 class MethodParserFactory
 {
     protected static $map = [
-        'get' => Get::class,
-        'set' => Set::class
+        'get' => Single::class,
+        'set' => Success::class
     ];
 
     /**
      *
+     * @param $firstChar
      * @param Redis $requestProto
-     * @return null|MethodParser
+     * @return MethodParser|false
      */
-    public static function getInstance($requestProto)
+    public static function getInstance($firstChar, $requestProto)
     {
-        $method = strtolower($requestProto->data[0]);
-        if(isset(self::$map[$method])) {
-            $className = self::$map[$method];
-            return new $className();
-        } else {
-            return null;
+        switch ($firstChar) {
+            case '$':
+                return new Single();
+            case '+':
+                return new Success();
+            case '*':
+                return new Multi();
+            case '-':
+                return new Fail();
+            default:
+                return false;
         }
     }
 

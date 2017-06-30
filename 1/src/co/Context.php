@@ -56,13 +56,17 @@ trait Context
     {
 
 
-            if(!$this->start) {
+        echo "-----in-----\n";
+        var_dump($message);
+            if(!$this->start && $this->co->valid()) {
                 $this->co->send($message);
 
             }
             $this->start = false;
 
             $value = $this->co->current();
+        echo "-----out-----\n";
+            var_dump($value);
             if($value instanceof ReturnValue) {
                 return $value->getValue();
             }
