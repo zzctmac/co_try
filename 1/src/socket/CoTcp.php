@@ -8,7 +8,6 @@
 namespace ct\socket;
 
 
-use ct\co\ReturnValue;
 use ct\protocol\IBase;
 use Swoole\Client;
 

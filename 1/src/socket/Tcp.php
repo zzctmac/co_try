@@ -23,6 +23,8 @@ abstract class Tcp
     protected $host;
     protected $port;
 
+    protected $close = false;
+
 
 
     /**
@@ -44,6 +46,8 @@ abstract class Tcp
         $this->client->on('error', function(Client $cli){
             echo "error connect=>" . $this->host . ":" . $this->port . PHP_EOL;
             $cli->close();
+            echo "re connect=>" . $this->host . ":" . $this->port . PHP_EOL;
+            $this->connect();
         });
 
         $this->client->on('close', [$this, 'onClose']);
@@ -56,6 +60,10 @@ abstract class Tcp
     public function onClose(Client $cli)
     {
         echo "close=>" . $this->host . ":" . $this->port . PHP_EOL;
+        if($this->close)
+            return ;
+        echo "re connect=>" . $this->host . ":" . $this->port . PHP_EOL;
+        $this->connect();
     }
 
 
@@ -79,6 +87,7 @@ abstract class Tcp
 
     public function close()
     {
+        $this->close = true;
         $this->client->close();
     }
 
