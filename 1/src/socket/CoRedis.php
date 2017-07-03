@@ -15,6 +15,7 @@ class CoRedis extends CoTcp
 {
 
     protected $protoQueue;
+    protected $requestProto = null;
 
     protected $buf = '';
 
@@ -41,19 +42,18 @@ class CoRedis extends CoTcp
 
     public function onReceive(Client $cli, $data)
     {
-        $co = $this->coQueue->dequeue();
+
         $msg = $this->decode($data);
-        if($msg === false) {
-            $this->coQueue->enqueue($co);
-        } else {
-            list($res, $buf) = $msg;
+        if($msg !== false) {
+            $co = $this->coQueue->dequeue();
+            list($res, $buf, $_) = $msg;
             $this->buf = $buf;
             if(count($msg) > 2) {
                 $this->info = $msg[2];
             }
             else
                 $this->info = null;
-            $co->runCoroutine($res);
+            $runArr = [[$co, $res]];
 
             do {
                 $data = $this->buf;
@@ -61,17 +61,37 @@ class CoRedis extends CoTcp
                     break;
                 $msg = $this->decode($data);
                 if($msg === false) {
+                    $this->protoQueue->enqueue($this->requestProto);
                     break;
                 }
                 $co = $this->coQueue->dequeue();
-                list($res, $buf) = $msg;
+                list($res, $buf, $_) = $msg;
                 $this->buf = $buf;
-                $co->runCoroutine($res);
-
+                $runArr[] = [$co, $res];
             }while(true);
+            foreach ($runArr as $runItem) {
+                $runItem[0]->runCoroutine($res);
+            }
+        } else {
+            $this->protoQueue->enqueue($this->requestProto);
         }
     }
 
+    protected function decode($data)
+    {
+        $proto = $this->protoQueue->dequeue();
+        $this->requestProto = $proto;
+        return \ct\protocol\Redis::decode($data, $proto);
+    }
+
+    protected static function mergeToDataByArr($data, $arr)
+    {
+        foreach ($arr as $k=>$v) {
+            $data[] = $k;
+            $data[] = $v;
+        }
+        return $data;
+    }
 
     public  function ping($context)
     {
@@ -92,11 +112,32 @@ class CoRedis extends CoTcp
         $this->sendMsg($data, $context);
     }
 
-    protected function decode($data)
+    public function setex($key, $ttl, $value, $context)
     {
-        $proto = $this->protoQueue->dequeue();
-        return \ct\protocol\Redis::decode($data, $proto, $this->buf);
+        $data = ['setex', $key, $ttl, $value];
+        $this->sendMsg($data, $context);
     }
+
+    public function setnx($key, $value, $context)
+    {
+        $data = ['setnx', $key, $value];
+        $this->sendMsg($data, $context);
+    }
+
+    public function mSet( $arr, $context)
+    {
+        $data = self::mergeToDataByArr(['mset'], $arr);
+        $this->sendMsg($data, $context);
+    }
+
+    public function mGet($arr, $context)
+    {
+        $data = ['mget'];
+        $data = array_merge($data, $arr);
+        $this->sendMsg($data, $context);
+    }
+
+
 
     public function hSet($key, $k, $v, $context)
     {
@@ -119,12 +160,16 @@ class CoRedis extends CoTcp
     public function hMSet($key, $arr, $context)
     {
         $data = ['hmset', $key];
-        foreach ($arr as $k=>$v) {
-            $data[] = $k;
-            $data[] = $v;
-        }
+        $data = self::mergeToDataByArr($data, $arr);
         $this->sendMsg($data, $context);
     }
+
+    public function hMGet($key, $arr, $context)
+    {
+        $data = array_merge(['hmget', $key], $arr);
+        $this->sendMsg($data, $context);
+    }
+
 
 
 

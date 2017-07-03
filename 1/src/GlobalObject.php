@@ -8,6 +8,7 @@
 namespace ct;
 
 
+use ct\co\ReturnValue;
 use ct\route\IBase;
 use ct\socket\CoRedis;
 use ct\socket\CoSimple;
@@ -52,6 +53,13 @@ class GlobalObject {
     public static function getCoRedisClient()
     {
         return self::$coRedis;
+    }
+
+    public static function newCoRedis($host, $port, $context)
+    {
+        $ins = new CoRedis($host, $port);
+        yield  $ins->coConnect($context);
+        yield ReturnValue::create($ins);
     }
 
 }

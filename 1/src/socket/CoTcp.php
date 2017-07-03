@@ -8,6 +8,7 @@
 namespace ct\socket;
 
 
+use ct\co\ReturnValue;
 use ct\protocol\IBase;
 use Swoole\Client;
 
@@ -54,20 +55,15 @@ abstract class CoTcp extends Tcp
         }
     }
 
-    public function coClose($context)
-    {
-        $this->isCoClose = true;
-        $this->coQueue->enqueue($context);
-        $this->close();
-    }
+
 
     public function onClose(Client $cli)
     {
-        $this->tcp->onClose($cli);
         if($this->isCoClose) {
             $co = $this->coQueue->dequeue();
             $co->runCoroutine('close');
         }
+        $this->tcp->onClose($cli);
     }
 
 

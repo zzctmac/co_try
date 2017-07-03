@@ -22,6 +22,11 @@ class Single implements MethodParser
     {
         $originStr = $data;
         $data = array_diff(explode("\r\n", $data), [""]);
+        // check is -1
+        if(substr($data[0], 1) + 0 === -1) {
+            $res =  [null, substr($originStr, 5), null];
+            return $res;
+        }
         if(count($data) < 2) {
             return false;
         }
@@ -32,6 +37,6 @@ class Single implements MethodParser
         } else {
             $lastStr = '';
         }
-        return [$data[1], $lastStr];
+        return [$data[1], $lastStr, null];
     }
 }

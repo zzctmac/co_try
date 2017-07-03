@@ -8,7 +8,7 @@
 include  __DIR__ . '/vendor/autoload.php';
 
 
-
+date_default_timezone_set("Asia/Shanghai");
 
 
 $serv = new Swoole\Http\Server("0.0.0.0", 9081);

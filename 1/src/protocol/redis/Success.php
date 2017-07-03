@@ -31,11 +31,11 @@ class Success implements MethodParser
             $lastStr = '';
         }
         if($requestProto->isPing) {
-            $res = substr($data, 1, strlen($data) - 3);
+            $res = substr($data, 1, $pos - 1);
             $msg = null;
         } else {
             $res = true;
-            $msg = substr($data, 1, strlen($data) - 3);
+            $msg = substr($data, 1, $pos - 1);
         }
         return [$res, $lastStr, $msg];
     }

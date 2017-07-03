@@ -35,4 +35,19 @@ class Redis
 
         $redis->close();
     }
+
+    public function shortAction(Request $request, Response $response)
+    {
+        $redis = new \Redis();
+        $redis->connect("127.0.0.1", 6379);
+        $redis->set('s', 1);
+        $data = $redis->get('s');
+
+
+
+        $redis->close();
+        unset($redis);
+
+        $response->write("<h1>$data</h1>");
+    }
 }

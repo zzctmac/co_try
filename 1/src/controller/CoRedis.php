@@ -8,7 +8,6 @@
 namespace ct\controller;
 
 
-use ct\co\ReturnValue;
 use ct\GlobalObject;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
@@ -82,11 +81,66 @@ class CoRedis extends Co
 
         $data = (yield $redis->get('s', $this));
 
-
-        yield $redis->coClose($this);
+        $redis->close();
 
 
 
         $response->write("<h1>$data</h1>");
+    }
+
+    public function longAction(Request $request, Response $response)
+    {
+        $redis = GlobalObject::getCoRedisClient();
+
+
+
+        yield $redis->set('s', 1, $this);
+
+        $data = (yield $redis->get('s', $this));
+
+
+
+
+        $response->write("<h1>$data</h1>");
+    }
+
+    public function setexAction(Request $request, Response $response)
+    {
+        $redis = GlobalObject::getCoRedisClient();
+        yield $redis->setex('exk', 20, date('Y-m-d H:i:s'), $this);
+        $response->write("success");
+    }
+
+    public function readexAction(Request $request, Response $response)
+    {
+        $redis = GlobalObject::getCoRedisClient();
+        $v = (yield $redis->get('exk', $this));
+        $response->write($v);
+    }
+
+    public function mAction(Request $request, Response $response)
+    {
+        $arr = [];
+        $keys = [];
+        for($i = 0; $i < 3; $i++)
+        {
+            $key = 'key_' .  str_shuffle('abcde');
+            $value = 'value_' . str_shuffle('ghjkl');
+            $response->write("<h1>$key:$value</h1>");
+            $arr[$key] = $value;
+            $keys[] = $key;
+        }
+
+        $redis = GlobalObject::getCoRedisClient();
+        yield $redis->mSet($arr, $this);
+
+        $list = (yield $redis->mGet($keys, $this));
+
+        $response->write("<hr />");
+        foreach ($list as $key=>$value)
+        {
+            $response->write("<h1>$key:$value</h1>");
+        }
+
     }
 }

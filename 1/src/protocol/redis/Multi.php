@@ -35,17 +35,29 @@ class Multi implements MethodParser
         $value = $key = null;
 
         $toggle = 1;
+        $useReqFields = false;
+        if(in_array(strtolower($requestProto->data[0]), ['mget'])) {
+            $useReqFields = true;
+        }
+
+        $useStep = 1;
 
         for($step = 0; $step < $count * 2; $step++) {
             if($step % 2 == 0) {
 
             } else {
-                if($toggle) {
-                    $key = $data[$step];
-                } else {
-                    $value = $data[$step];
-                    $res[$key] = $value;
-                }
+                do {
+                    if ($useReqFields) {
+                        $res[$requestProto->data[$useStep++]] = $data[$step];
+                        break;
+                    }
+                    if ($toggle) {
+                        $key = $data[$step];
+                    } else {
+                        $value = $data[$step];
+                        $res[$key] = $value;
+                    }
+                }while(false);
                 $toggle = $toggle ^ 1;
             }
             $pos += strlen($data[$step]) + 2;
@@ -59,7 +71,7 @@ class Multi implements MethodParser
             $lastStr = '';
         }
 
-        return [$res, $lastStr];
+        return [$res, $lastStr, null];
 
 
     }
